@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Integrity Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input[type="file"], input[type="text"], select {
+            margin-bottom: 20px;
+            width: 100%;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .failure {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Integrity Checker</h1>
+        <form id="integrityForm">
+            <input type="file" id="file" name="file" required>
+            <input type="text" id="expectedHash" name="expected_hash" placeholder="Enter expected hash" required>
+            <select id="algorithm" name="algorithm" required>
+                <option value="md5">MD5</option>
+                <option value="sha1">SHA-1</option>
+                <option value="sha256" selected>SHA-256</option>
+            </select>
+            <button type="submit">Verify Integrity</button>
+        </form>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('integrityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('file');
+            const expectedHash = document.getElementById('expectedHash').value;
+            const algorithm = document.getElementById('algorithm').value;
+            const resultDiv = document.getElementById('result');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('expected_hash', expectedHash);
+            formData.append('algorithm', algorithm);
+
+            try {
+                const response = await fetch('/verify', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = ` ${data.message} (Algorithm: ${data.algorithm.toUpperCase()})`;
+                } else {
+                    resultDiv.className = 'result failure';
+                    resultDiv.textContent = ` ${data.message} (Algorithm: ${data.algorithm.toUpperCase()})`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result failure';
+                resultDiv.textContent = ' An error occurred. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
